@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "adaptive-takehome.fullname" . }}
+  labels:
+    app.kubernetes.io/component: adaptive-takehome
+spec:
+  type: {{ .Values.adaptiveTakeHome.service.type }}
+  ports:
+    - port: {{ .Values.adaptiveTakeHome.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "adaptive-takehome.selectorLabels" . | nindent 4 }}

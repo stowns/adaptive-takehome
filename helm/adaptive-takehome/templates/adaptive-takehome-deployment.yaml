@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "adaptive-takehome.fullname" . }}
+  labels:
+    {{- include "adaptive-takehome.labels" . | nindent 4 }}
+    app.kubernetes.io/component: adaptive-takehome
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "adaptive-takehome.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.adaptiveTakeHome.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "adaptive-takehome.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+      - name: adaptive-takehome
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.adaptiveTakeHome.image.repository }}:{{ .Values.adaptiveTakeHome.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.adaptiveTakeHome.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.adaptiveTakeHome.service.targetPort }}
+          protocol: TCP
+        livenessProbe:
+          {{- toYaml .Values.adaptiveTakeHome.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.adaptiveTakeHome.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.adaptiveTakeHome.resources | nindent 12 }}
+        env:
+          - 
+            name: OLLAMA_URL
+            value: {{ .Values.ollama.url }}
+          - 
+            name: OLLAMA_MODEL
+            value: {{ .Values.ollama.model }}
+          - 
+            name: LOG_DIR
+            value: /app/logs
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}
